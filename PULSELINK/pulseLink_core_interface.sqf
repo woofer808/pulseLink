@@ -10,7 +10,7 @@ comment "-----------------------------------------------------------------------
 
 
 
-
+/*
 
 if (pulseLink_var_debug) then {systemChat "pulseLink: ready"};
 waitUntil 	{											// Hold the line until one of the modes are started
@@ -19,7 +19,7 @@ waitUntil 	{											// Hold the line until one of the modes are started
 
 private _timer = time + _mainInputTimeout;						// Start the input timer timeout
 
-
+*/
 
 
 
