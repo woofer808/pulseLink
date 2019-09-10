@@ -8,6 +8,22 @@ comment "	Receives the keypress code from the game and converts to decimal.					
 comment "																										";
 comment "-------------------------------------------------------------------------------------------------------";
 
+
+
+
+
+if (pulseLink_var_debug) then {systemChat "pulseLink: ready"};
+waitUntil 	{											// Hold the line until one of the modes are started
+				pulseLink_var_pulseKey 					// Regular function execution
+			};
+
+private _timer = time + _mainInputTimeout;						// Start the input timer timeout
+
+
+
+
+
+
 // if debug is on, tell the user what's going on
 if (pulseLink_var_debug) then {systemChat "Loop started, please provide key sequence"};
 
