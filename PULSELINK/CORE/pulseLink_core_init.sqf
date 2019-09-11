@@ -1,5 +1,5 @@
 comment "-------------------------------------------------------------------------------------------------------";
-comment "							pulseLink, by woofer, based on concept by Reggeaeman						";
+comment "							  pulseLink by woofer, based on concept by Reggeaeman						";
 comment "																										";
 comment "										voice activated function call									";
 comment "																										";
@@ -11,18 +11,14 @@ comment "-----------------------------------------------------------------------
 //NOTE- Verification is in. Best way I have found to mitigate low FPS. Current method is double sending of words.
 //NOTE- Currently any word length can be used. Input time and verification method affects choice of word length.
 //NOTE- There is a syncing feature that when the pulse key is spammed (by VA command), bot VA and pulseLink will reset to same settings
+//NOTE- The script framework is restricted to the CORE folder. Any user additions to the script are unchanged by core updates.
 
-//TODO- Make the core easily updateable. Just one folder. Means that the functions should be located in "functions", I guess
+// TODO- RESTRUCTURE: REMOVE ANY CORE FUNCTIONALITY FROM THE FUNCTION LIST - reserve and move at least functions 0-15 to CORE - or leave as is
 
 //TODO- Make a "restart script" command to sync the profile and the mod at the beginning b/c of settings for example (function 11)
 //TODO- Audible/visual confirmation of commands and errors internally by the script. Maybe should be modular.
 //TODO- Settings storage by using profileNamespace and call saveProfileNamespace. May be that VA need to load it.
 //TODO- Make it possible to bind the keys in-game. CBA keybinds doesn't seem to work for me since it's modifier-sensitive
-
-//IDEA- Put the functions in open text in USERCONFIG - though that will make it a script injector
-
-// Function ideas
-//IDEA- Storing and recalling locations with voice like with Reggeaeman
 
 
 comment "-------------------------------------------------------------------------------------------------------";
@@ -49,15 +45,20 @@ pulseLink_var_interfaceDone			= false;	// Used to kill spawned interfaces that a
 
 pulseLink_fnc_compileAll = { // Compile functions as a function. Makes it possible to re-compile on the fly. It's here to help with development.
 
-	pulseLink_core_mainLoop 		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_mainLoop.sqf";
-	pulseLink_core_services 		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_services.sqf";
-	pulseLink_core_interface		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_interface.sqf";
-	pulseLink_core_functions		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_functions.sqf";
-	pulseLink_core_functionSelect 	= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_functionSelect.sqf";
-	pulseLink_core_decToBin 		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_decToBin.sqf";
-	pulseLink_core_binToDec 		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_binToDec.sqf";
+	pulseLink_core_mainLoop 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_mainLoop.sqf";
+	pulseLink_core_services 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_services.sqf";
+	pulseLink_core_interface		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_interface.sqf";
+	pulseLink_core_decToBin 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_decToBin.sqf";
+	pulseLink_core_binToDec 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_binToDec.sqf";
 
-	brief_fnc_groupCall				= compile preprocessFileLineNumbers "PULSELINK\functions\brief_fnc_groupCall.sqf";
+	pulseLink_fnc_functions			= compile preprocessFileLineNumbers "PULSELINK\pulseLink_fnc_functions.sqf";
+	pulseLink_fnc_functionSelect 	= compile preprocessFileLineNumbers "PULSELINK\pulseLink_fnc_functionSelect.sqf";
+	
+	// The function compiler is there for users to add their own scripts to be compiled.
+	// Helps with updating the CORE by moving the step out from init
+	_functionCompiler = [] execVM "PULSELINK\pulseLink_fnc_functionCompiler.sqf";
+	waitUntil {scriptDone _functionCompiler};
+	
 	if (pulseLink_var_debug) then {systemChat "--> scripts compiled"};
 };
 [] call pulseLink_fnc_compileAll;
@@ -65,7 +66,7 @@ pulseLink_fnc_compileAll = { // Compile functions as a function. Makes it possib
 
 // Spawn the services which means keypresses and other stuff.
 if (pulseLink_var_devMode) then {
-	[] execVM "PULSELINK\pulseLink_core_services.sqf";
+	[] execVM "PULSELINK\CORE\pulseLink_core_services.sqf";
 } else {
 	[] spawn pulseLink_core_services;
 };
@@ -73,16 +74,16 @@ if (pulseLink_var_devMode) then {
 
 // Call the function list to declare all the functions.
 if (pulseLink_var_devMode) then {
-	_functionList = [] execVM "PULSELINK\pulseLink_core_functions.sqf";
+	_functionList = [] execVM "PULSELINK\pulseLink_fnc_functions.sqf";
 	waitUntil {scriptDone _functionList};
 } else {
-	[] call pulseLink_core_functions;
+	[] call pulseLink_fnc_functions;
 };
 
 
 // Spawn the main loop.
 if (pulseLink_var_devMode) then {
-	[] execVM "PULSELINK\pulseLink_core_mainLoop.sqf";
+	[] execVM "PULSELINK\CORE\pulseLink_core_mainLoop.sqf";
 } else {
 	[] spawn pulseLink_core_mainLoop;
 };

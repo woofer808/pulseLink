@@ -23,7 +23,7 @@ while {pulseLink_var_running} do {
 	
 	// Receive function code
 	_input = [] call pulseLink_core_interface; 		// This arrests the current script until interface is done or aborted
-	[_input] call pulseLink_core_functionSelect;	// Run the received function
+	[_input] call pulseLink_fnc_functionSelect;	// Run the received function
 	
 	
 	
@@ -73,7 +73,7 @@ comment "-----------------------------------------------------------------------
 			};
 		
 		if (!pulseLink_var_verification) then {				// If verification isn't on, just run the desired function
-			[_input] call pulseLink_core_functionSelect;
+			[_input] call pulseLink_fnc_functionSelect;
 		};
 		
 	};
@@ -102,7 +102,7 @@ comment "-----------------------------------------------------------------------
 			
 				case (!pulseLink_var_inputNumberMode): {
 				
-					[_input] call pulseLink_core_functionSelect;			// Run the function that corresponds to the given word
+					[_input] call pulseLink_fnc_functionSelect;			// Run the function that corresponds to the given word
 				};
 			
 				case (pulseLink_var_inputNumberMode): {
