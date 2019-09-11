@@ -64,16 +64,15 @@ while {true} do {
 	if (pulseLink_var_interfaceDone) exitWith {if (pulseLink_var_debug) then {systemChat "script was halted"};};
 
 	// If the zero key was pressed, store the bit as 0 at the current bit number
-	if (pulseLink_var_zeroKey) then {pulseLink_var_zeroKey = false;_word set [_bit,0];_bit = _bit + 1;if (pulseLink_var_debug) then {systemChat "zeroKey was pressed"};};
+	if (pulseLink_var_zeroKey) then {pulseLink_var_zeroKey = false;_word set [_bit,0];_bit = _bit + 1;};
 	// If the one key was pressed, store the bit as 1 at the current bit number
-	if (pulseLink_var_oneKey) then {pulseLink_var_oneKey = false;_word set [_bit,1];_bit = _bit + 1;if (pulseLink_var_debug) then {systemChat "oneKey was pressed"};};
+	if (pulseLink_var_oneKey) then {pulseLink_var_oneKey = false;_word set [_bit,1];_bit = _bit + 1;};
 	// If pulse key was pressed. Exit the script.
 	if (pulseLink_var_pulseKey) exitWith {pulseLink_var_pulseKey = false;if (pulseLink_var_debug) then {systemChat "pulse key was pressed"};};
 
-	// If debug is on, show the current input as it's being entered.
-	if (pulseLink_var_debug) then {systemChat format ["current _word: %1",_word]};
 
 };
+
 
 // Input of zeroes and ones is no longer allowed
 pulseLink_var_allowInput = false;
@@ -83,6 +82,9 @@ if (_word isEqualTo -1) exitWith {_word;};
 
 // Convert the word into decimal
 private _numberOutput = _word call pulseLink_core_binToDec;
+
+// If debug is on, show the current input
+if (pulseLink_var_debug) then {systemChat format ["current _word: %1 and _function ID: %2",_word,_numberOutput]};
 
 // Return the proper value
 _numberOutput;

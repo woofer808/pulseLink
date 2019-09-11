@@ -8,7 +8,26 @@ comment "	Function definitions for each functionID. It's where the code is at.		
 comment "																										";
 comment "-------------------------------------------------------------------------------------------------------";
 
-pulseLink_function_2 = {pulseLink_var_inputNumberMode = true};
+pulseLink_function_2 = {
+	// Reserved for core functionality
+	private _input = [] call pulseLink_core_interface;	// Start interface to receive number
+	
+	if (pulseLink_var_verification) then {
+	_verification = [_input] call pulseLink_core_verification;		// If verification is on
+	
+		if (_verification isEqualTo _input) then {
+			if (pulseLink_var_debug) then {systemChat format ["pulseLink number input: %1",_input]};
+			pulseLink_var_inputNumber = _input;
+		} else {
+			systemChat "pulseLink: Number input failed verification.";
+		};
+		
+	} else {
+		if (pulseLink_var_debug) then {systemChat format ["pulseLink number input: %1",_input]};
+		pulseLink_var_inputNumber = _input;
+	};
+	
+};
 pulseLink_function_3 = {systemChat "pulseLink_function_1"};
 pulseLink_function_4 = {systemChat "pulseLink_function_2"};
 pulseLink_function_5 = {systemChat "pulseLink_function_3"};
@@ -27,7 +46,7 @@ pulseLink_function_17 = {systemChat "pulseLink_function_17"};
 pulseLink_function_18 = {systemChat "pulseLink_function_18"};
 pulseLink_function_19 = {systemChat "pulseLink_function_19"};
 pulseLink_function_20 = {systemChat "pulseLink_function_20"};
-pulseLink_function_21 = {systemChat "test ran";};
+pulseLink_function_21 = {systemChat "--------------------------------> test ran";};
 pulseLink_function_22 = {systemChat "pulseLink_function_22"};
 pulseLink_function_23 = {systemChat "pulseLink_function_23"};
 pulseLink_function_24 = {systemChat "pulseLink_function_24"};

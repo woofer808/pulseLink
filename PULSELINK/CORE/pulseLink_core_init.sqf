@@ -13,12 +13,11 @@ comment "-----------------------------------------------------------------------
 //NOTE- There is a syncing feature that when the pulse key is spammed (by VA command), bot VA and pulseLink will reset to same settings
 //NOTE- The script framework is restricted to the CORE folder. Any user additions to the script are unchanged by core updates.
 
-// TODO- RESTRUCTURE: REMOVE ANY CORE FUNCTIONALITY FROM THE FUNCTION LIST - reserve and move at least functions 0-15 to CORE - or leave as is
 
 //TODO- Make a "restart script" command to sync the profile and the mod at the beginning b/c of settings for example (function 11)
 //TODO- Audible/visual confirmation of commands and errors internally by the script. Maybe should be modular.
 //TODO- Settings storage by using profileNamespace and call saveProfileNamespace. May be that VA need to load it.
-//TODO- Make it possible to bind the keys in-game. CBA keybinds doesn't seem to work for me since it's modifier-sensitive
+//TODO- Make it possible to bind the keys in-game. CBA keybinds doesn't seem to work for me since it's modifier-sensitive.
 
 
 comment "-------------------------------------------------------------------------------------------------------";
@@ -36,9 +35,10 @@ pulseLink_var_oneKey 				= false;	// Bool state of a keypress event.
 pulseLink_var_pulseKey 				= false;	// Bool state of a keypress event.
 pulseLink_var_allowInput			= false;	// Only allow input of zeros and ones when the main loop is set to receive them
 pulseLink_var_verification			= false;	// When true, the script will receive a confirmation word from VA to make sure no bits were garbled
+pulseLink_var_verificationSkip 		= false;
 
-pulseLink_var_inputNumber			= 0;		// Global variable used for passing around number input from input function
-pulseLink_var_inputNumberMode		= false;	// Global variable used for passing around number input from input function
+//pulseLink_var_inputNumber			= 0;		// Global variable used for passing around number input from input function
+//pulseLink_var_inputNumberMode		= false;	// Global variable used for passing around number input from input function
 
 pulseLink_var_interfaceDone			= false;	// Used to kill spawned interfaces that are waiting for input
 
@@ -48,6 +48,7 @@ pulseLink_fnc_compileAll = { // Compile functions as a function. Makes it possib
 	pulseLink_core_mainLoop 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_mainLoop.sqf";
 	pulseLink_core_services 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_services.sqf";
 	pulseLink_core_interface		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_interface.sqf";
+	pulseLink_core_verification		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_verification.sqf";
 	pulseLink_core_decToBin 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_decToBin.sqf";
 	pulseLink_core_binToDec 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_binToDec.sqf";
 
