@@ -1,7 +1,7 @@
 comment "-------------------------------------------------------------------------------------------------------";
 comment "										pulseLink, by woofer.											";
 comment "																										";
-comment "									pulseLink_core_functionSelect										";
+comment "									pulseLink_fnc_functionSelect										";
 comment "																										";
 comment "																										";
 comment "	List of available functions and their corresponding functionID number.								";

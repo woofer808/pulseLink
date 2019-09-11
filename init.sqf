@@ -16,5 +16,5 @@
 */
 
 // Initiate pulseLink script
-[] execVM "PULSELINK\pulseLink_core_init.sqf";
+[] execVM "PULSELINK\CORE\pulseLink_core_init.sqf";
 

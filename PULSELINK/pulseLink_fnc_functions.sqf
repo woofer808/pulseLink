@@ -1,7 +1,7 @@
 comment "-------------------------------------------------------------------------------------------------------";
 comment "										pulseLink, by woofer.											";
 comment "																										";
-comment "									  pulseLink_core_functions											";
+comment "									  pulseLink_fnc_functions											";
 comment "																										";
 comment "																										";
 comment "	Function definitions for each functionID. It's where the code is at.								";
