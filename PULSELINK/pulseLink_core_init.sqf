@@ -31,8 +31,8 @@ comment "-----------------------------------------------------------------------
 
 
 // Declare global variables and settings
+pulseLink_var_debug 				= true; 	// True will enable debug messages.
 pulseLink_var_devMode 				= false; 	// True will use execVM instead of call and spawn for scripts. It's here to help with development.
-pulseLink_var_debug 				= false; 	// True will enable debug messages.
 
 pulseLink_var_running 				= true;		// False will kill all running functions related to the script.
 pulseLink_var_zeroKey 				= false;	// Bool state of a keypress event.
@@ -44,13 +44,14 @@ pulseLink_var_verification			= false;	// When true, the script will receive a co
 pulseLink_var_inputNumber			= 0;		// Global variable used for passing around number input from input function
 pulseLink_var_inputNumberMode		= false;	// Global variable used for passing around number input from input function
 
+pulseLink_var_interfaceDone			= false;	// Used to kill spawned interfaces that are waiting for input
+
 
 pulseLink_fnc_compileAll = { // Compile functions as a function. Makes it possible to re-compile on the fly. It's here to help with development.
 
 	pulseLink_core_mainLoop 		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_mainLoop.sqf";
 	pulseLink_core_services 		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_services.sqf";
 	pulseLink_core_interface		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_interface.sqf";
-	pulseLink_core_interface2		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_interface2.sqf";
 	pulseLink_core_functions		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_functions.sqf";
 	pulseLink_core_functionSelect 	= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_functionSelect.sqf";
 	pulseLink_core_decToBin 		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_decToBin.sqf";
