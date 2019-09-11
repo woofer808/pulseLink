@@ -76,7 +76,7 @@ Ins - 210 - 0xD2
 			if (pulseLink_var_debug) then {systemChat format ["Sync pulse stack +1, now at: %1",_buttonStack];}
 		} else {
 			_buttonStack = 0;
-			if (pulseLink_var_debug) then {systemChat "Sync pulse stack got resetting..."};
+			//if (pulseLink_var_debug) then {systemChat "Sync pulse stack got reset..."};
 		};
 		
 		// Check if we managed to stack the button enough times

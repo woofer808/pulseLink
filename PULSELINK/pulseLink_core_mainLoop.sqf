@@ -15,18 +15,15 @@ private _mainInputTimeout = 8;		// Timeout in seconds for the script to wait for
 
 private _input 			= 0;		// Declare code array
 private _verification 	= 0;		// Declare verification code array
-private _timer		 	= 1;		// Declare timeout state
 
 // This is the main loop that iterates through keypress inputs to build the complete binary function code
 while {pulseLink_var_running} do {
-	
+
 	scopeName "mainLoop";
-	if (pulseLink_var_debug) then {systemChat "pulseLink: ready"};
-	waitUntil 	{											// Hold the line until one of the modes are started
-					pulseLink_var_pulseKey 					// Regular function execution
-				};
 	
-	_timer = time + _mainInputTimeout;						// Start the input timer timeout
+	// Receive function code
+	_input = [] call pulseLink_core_interface; 		// This arrests the current script until interface is done or aborted
+	[_input] call pulseLink_core_functionSelect;	// Run the received function
 	
 	
 	
@@ -92,12 +89,11 @@ comment "-----------------------------------------------------------------------
 	
 		// Don't run verification this time if it was just activated
 		if (pulseLink_var_verificationSkipFirstRun) exitWith {pulseLink_var_verificationSkipFirstRun = false};
-	
-		waitUntil {pulseLink_var_pulseKey};									// Wait for pulseKey to start a new interface
 		
-		_verification = [] call pulseLink_core_interface;					// Run the function that receives the word
+		// Receive function code
+		_verification = [] call pulseLink_core_interface; // This arrests the current script until interface is done or aborted
 		
-		if (_verification isEqualTo -1) exitWith {systemchat "pulseLink: Transfer timed out";}; // If input timed out during interfacing, exit scope
+		if (_verification isEqualTo -1) exitWith {systemchat "pulseLink: Transfer failed";}; // If input timed out during interfacing, exit scope
 
 
 		if (_verification isEqualTo _input) then {							// This is where we run the proper case
@@ -108,7 +104,6 @@ comment "-----------------------------------------------------------------------
 				
 					[_input] call pulseLink_core_functionSelect;			// Run the function that corresponds to the given word
 				};
-			
 			
 				case (pulseLink_var_inputNumberMode): {
 				

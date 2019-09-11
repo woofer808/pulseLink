@@ -4,22 +4,37 @@ comment "																										";
 comment "										   pulseLink_core_interface										";
 comment "																										";
 comment "																										";
-comment "	Receives the keypress code from the game and converts to decimal.									";
+comment "	Receives the keypress code from VoiceAttack and converts to base-10 decimal.						";
 comment "																										";
 comment "-------------------------------------------------------------------------------------------------------";
 
+/* PSEUDO CODE
+- Script called
+- Wait until pulse-key is pressed -OR- script is terminated
+- Start while loop to recieve bits
+	- if zero-key is pressed, then write a zero to the current bit in word array
+	- if one-key is pressed, then write a one to the current bit in word array
+	- if pulse-key is pressed, then consider code transfer to be complete
+- Convert the base-2 binary word into base-10 decimal number
+- Return base-10 decimal number
+- If script was interrupted by timeouts or whatnot, return -1 as failstate
+*/
 
 
-/*
 
+private _codeTimeout 	= 1;	// Timeout in seconds between each pulse and bit sent
+
+// Function has been spawned, now we await the first pulse to start the recording
 if (pulseLink_var_debug) then {systemChat "pulseLink: ready"};
-waitUntil 	{											// Hold the line until one of the modes are started
-				pulseLink_var_pulseKey 					// Regular function execution
+waitUntil 	{
+				pulseLink_var_pulseKey 		||	// Go on when pulse is given
+				pulseLink_var_interfaceDone		// Go on to quit if script is set to false
 			};
 
-private _timer = time + _mainInputTimeout;						// Start the input timer timeout
 
-*/
+// If the script is terminated manually or by timer
+if (pulseLink_var_interfaceDone) exitWith {systemChat "pulseLink: Interface aborted."};
+
 
 
 
@@ -27,31 +42,26 @@ private _timer = time + _mainInputTimeout;						// Start the input timer timeout
 // if debug is on, tell the user what's going on
 if (pulseLink_var_debug) then {systemChat "Loop started, please provide key sequence"};
 
-// Pulse key has to be sent before running this function is run
-// Make sure the pulse key state is set back to false
-pulseLink_var_pulseKey = false;
 
-// Allow input of zeros and ones to be done
-pulseLink_var_allowInput = true;
+pulseLink_var_pulseKey = false;		// Make sure the pulse key state is set back to false
 
+pulseLink_var_allowInput = true;	// Allow input of zeros and ones to be done
 
+private _word	= [];				// Declare the binary code array
+private _bit	= 0; 				// Declare the first bit number place in the binary code array
+private _timer	= 0;				// Declare variable used for checking input timeout
 
-private _word	= [];	// Declare the binary code array
-private _bit	= 0; 	// Declare the first bit number place in the binary code array
-private _timer	= 0;	// Declare variable used for checking input timeout
-
-while {pulseLink_var_running && !pulseLink_var_pulseKey} do {
+while {true} do {
 	
-	// Start the input timer to control for timeout of the keypresses
-	_timer = time + 1;
+	_timer = time + _codeTimeout;				// Start the input timer to control for timeout of the keypresses
 
 	// Hold the loop until either of the proper keys are pressed or the timer has run out
-	waitUntil {pulseLink_var_zeroKey || pulseLink_var_oneKey || pulseLink_var_pulseKey || (_timer < time)};
+	waitUntil {pulseLink_var_zeroKey || pulseLink_var_oneKey || pulseLink_var_pulseKey || (_timer < time) || pulseLink_var_interfaceDone};
 
 	// If it was the timer that ran out of... well, time. Just exit the script.
-	if (_timer < time) exitWith {if (pulseLink_var_debug) then {_word = -1;systemChat "input timeout"};};
+	if (_timer < time) exitWith {if (pulseLink_var_debug) then {systemChat "input timeout"};_word = -1;};
 	// If the mod has been requested to stop, quit all scripts.
-	if (!pulseLink_var_running) exitWith {if (pulseLink_var_debug) then {systemChat "script was halted"};};
+	if (pulseLink_var_interfaceDone) exitWith {if (pulseLink_var_debug) then {systemChat "script was halted"};};
 
 	// If the zero key was pressed, store the bit as 0 at the current bit number
 	if (pulseLink_var_zeroKey) then {pulseLink_var_zeroKey = false;_word set [_bit,0];_bit = _bit + 1;if (pulseLink_var_debug) then {systemChat "zeroKey was pressed"};};
