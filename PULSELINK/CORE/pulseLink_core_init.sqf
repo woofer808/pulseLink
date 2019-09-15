@@ -5,14 +5,18 @@ comment "										voice activated function call									";
 comment "																										";
 comment "-------------------------------------------------------------------------------------------------------";
 
-//NOTE- Transfer - or keypress - codes are handeled completely in the background. VA converts decToBin, Arma converts binToDec
-//NOTE- In VA it seems to be more important with keypress duration rather than pause duration in relation to FPS
+//NOTE- Transfer - or keypress - codes are handeled in the background through the "interface". VA converts decToBin, Arma converts binToDec
+//NOTE- As related to FPS, in VA it seems to be more important with keypress duration rather than pause between keypresses.
 //NOTE- Current normal speed in voice profile @20 fps is 0.02s pause and 0.05 keypress duration.
-//NOTE- Verification is in. Best way I have found to mitigate low FPS. Current method is double sending of words.
-//NOTE- Currently any word length can be used. Input time and verification method affects choice of word length.
+//NOTE- Verification is in. Best way I have found to mitigate low FPS. Current method is double sending of words integrated into interface.
+//NOTE- Currently any word length can be used. Input time and verification affects choice of word length.
 //NOTE- There is a syncing feature that when the pulse key is spammed (by VA command), bot VA and pulseLink will reset to same settings
 //NOTE- The script framework is restricted to the CORE folder. Any user additions to the script are unchanged by core updates.
 
+//TODO- Figure out what to do with the native number input system. Should it be it's own core function?
+//TODO- Clean up profile core and give it proper structure
+//TODO- Looks like it's possible to spam command still, but that's with keybinds to VA commands.
+//TODO- Input number doesn't work in combination with verification.
 
 //TODO- Make a "restart script" command to sync the profile and the mod at the beginning b/c of settings for example (function 11)
 //TODO- Audible/visual confirmation of commands and errors internally by the script. Maybe should be modular.
@@ -33,22 +37,14 @@ pulseLink_var_running 				= true;		// False will kill all running functions rela
 pulseLink_var_zeroKey 				= false;	// Bool state of a keypress event.
 pulseLink_var_oneKey 				= false;	// Bool state of a keypress event.
 pulseLink_var_pulseKey 				= false;	// Bool state of a keypress event.
-pulseLink_var_allowInput			= false;	// Only allow input of zeros and ones when the main loop is set to receive them
+pulseLink_var_allowInput			= false;	// Allow input of zeros and ones when the interface is supposed to receive
 pulseLink_var_verification			= false;	// When true, the script will receive a confirmation word from VA to make sure no bits were garbled
-pulseLink_var_verificationSkip 		= false;
-
-//pulseLink_var_inputNumber			= 0;		// Global variable used for passing around number input from input function
-//pulseLink_var_inputNumberMode		= false;	// Global variable used for passing around number input from input function
-
-pulseLink_var_interfaceDone			= false;	// Used to kill spawned interfaces that are waiting for input
-
 
 pulseLink_fnc_compileAll = { // Compile functions as a function. Makes it possible to re-compile on the fly. It's here to help with development.
 
 	pulseLink_core_mainLoop 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_mainLoop.sqf";
 	pulseLink_core_services 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_services.sqf";
 	pulseLink_core_interface		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_interface.sqf";
-	pulseLink_core_verification		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_verification.sqf";
 	pulseLink_core_decToBin 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_decToBin.sqf";
 	pulseLink_core_binToDec 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_binToDec.sqf";
 
@@ -60,7 +56,7 @@ pulseLink_fnc_compileAll = { // Compile functions as a function. Makes it possib
 	_functionCompiler = [] execVM "PULSELINK\pulseLink_fnc_functionCompiler.sqf";
 	waitUntil {scriptDone _functionCompiler};
 	
-	if (pulseLink_var_debug) then {systemChat "--> scripts compiled"};
+	if (pulseLink_var_debug) then {systemChat "pulseLink: scripts compiled"};
 };
 [] call pulseLink_fnc_compileAll;
 
