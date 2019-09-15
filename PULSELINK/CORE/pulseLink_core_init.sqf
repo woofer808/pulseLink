@@ -1,28 +1,27 @@
 comment "-------------------------------------------------------------------------------------------------------";
-comment "							pulseLink, by woofer, based on concept by Reggeaeman						";
+comment "							  pulseLink by woofer, based on concept by Reggeaeman						";
 comment "																										";
 comment "										voice activated function call									";
 comment "																										";
 comment "-------------------------------------------------------------------------------------------------------";
 
-//NOTE- Transfer - or keypress - codes are handeled completely in the background. VA converts decToBin, Arma converts binToDec
-//NOTE- In VA it seems to be more important with keypress duration rather than pause duration in relation to FPS
+//NOTE- Transfer - or keypress - codes are handeled in the background through the "interface". VA converts decToBin, Arma converts binToDec
+//NOTE- As related to FPS, in VA it seems to be more important with keypress duration rather than pause between keypresses.
 //NOTE- Current normal speed in voice profile @20 fps is 0.02s pause and 0.05 keypress duration.
-//NOTE- Verification is in. Best way I have found to mitigate low FPS. Current method is double sending of words.
-//NOTE- Currently any word length can be used. Input time and verification method affects choice of word length.
+//NOTE- Verification is in. Best way I have found to mitigate low FPS. Current method is double sending of words integrated into interface.
+//NOTE- Currently any word length can be used. Input time and verification affects choice of word length.
 //NOTE- There is a syncing feature that when the pulse key is spammed (by VA command), bot VA and pulseLink will reset to same settings
+//NOTE- The script framework is restricted to the CORE folder. Any user additions to the script are unchanged by core updates.
 
-//TODO- Make the core easily updateable. Just one folder. Means that the functions should be located in "functions", I guess
+//TODO- Figure out what to do with the native number input system. Should it be it's own core function?
+//TODO- Clean up profile core and give it proper structure
+//TODO- Looks like it's possible to spam command still, but that's with keybinds to VA commands.
+//TODO- Input number doesn't work in combination with verification.
 
 //TODO- Make a "restart script" command to sync the profile and the mod at the beginning b/c of settings for example (function 11)
 //TODO- Audible/visual confirmation of commands and errors internally by the script. Maybe should be modular.
 //TODO- Settings storage by using profileNamespace and call saveProfileNamespace. May be that VA need to load it.
-//TODO- Make it possible to bind the keys in-game. CBA keybinds doesn't seem to work for me since it's modifier-sensitive
-
-//IDEA- Put the functions in open text in USERCONFIG - though that will make it a script injector
-
-// Function ideas
-//IDEA- Storing and recalling locations with voice like with Reggeaeman
+//TODO- Make it possible to bind the keys in-game. CBA keybinds doesn't seem to work for me since it's modifier-sensitive.
 
 
 comment "-------------------------------------------------------------------------------------------------------";
@@ -31,40 +30,40 @@ comment "-----------------------------------------------------------------------
 
 
 // Declare global variables and settings
+pulseLink_var_debug 				= true; 	// True will enable debug messages.
 pulseLink_var_devMode 				= false; 	// True will use execVM instead of call and spawn for scripts. It's here to help with development.
-pulseLink_var_debug 				= false; 	// True will enable debug messages.
 
 pulseLink_var_running 				= true;		// False will kill all running functions related to the script.
 pulseLink_var_zeroKey 				= false;	// Bool state of a keypress event.
 pulseLink_var_oneKey 				= false;	// Bool state of a keypress event.
 pulseLink_var_pulseKey 				= false;	// Bool state of a keypress event.
-pulseLink_var_allowInput			= false;	// Only allow input of zeros and ones when the main loop is set to receive them
+pulseLink_var_allowInput			= false;	// Allow input of zeros and ones when the interface is supposed to receive
 pulseLink_var_verification			= false;	// When true, the script will receive a confirmation word from VA to make sure no bits were garbled
-
-pulseLink_var_inputNumber			= 0;		// Global variable used for passing around number input from input function
-pulseLink_var_inputNumberMode		= false;	// Global variable used for passing around number input from input function
-
 
 pulseLink_fnc_compileAll = { // Compile functions as a function. Makes it possible to re-compile on the fly. It's here to help with development.
 
-	pulseLink_core_mainLoop 		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_mainLoop.sqf";
-	pulseLink_core_services 		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_services.sqf";
-	pulseLink_core_interface		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_interface.sqf";
-	pulseLink_core_interface2		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_interface2.sqf";
-	pulseLink_core_functions		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_functions.sqf";
-	pulseLink_core_functionSelect 	= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_functionSelect.sqf";
-	pulseLink_core_decToBin 		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_decToBin.sqf";
-	pulseLink_core_binToDec 		= compile preprocessFileLineNumbers "PULSELINK\pulseLink_core_binToDec.sqf";
+	pulseLink_core_mainLoop 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_mainLoop.sqf";
+	pulseLink_core_services 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_services.sqf";
+	pulseLink_core_interface		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_interface.sqf";
+	pulseLink_core_decToBin 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_decToBin.sqf";
+	pulseLink_core_binToDec 		= compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_binToDec.sqf";
 
-	brief_fnc_groupCall				= compile preprocessFileLineNumbers "PULSELINK\functions\brief_fnc_groupCall.sqf";
-	if (pulseLink_var_debug) then {systemChat "--> scripts compiled"};
+	pulseLink_fnc_functions			= compile preprocessFileLineNumbers "PULSELINK\pulseLink_fnc_functions.sqf";
+	pulseLink_fnc_functionSelect 	= compile preprocessFileLineNumbers "PULSELINK\pulseLink_fnc_functionSelect.sqf";
+	
+	// The function compiler is there for users to add their own scripts to be compiled.
+	// Helps with updating the CORE by moving the step out from init
+	_functionCompiler = [] execVM "PULSELINK\pulseLink_fnc_functionCompiler.sqf";
+	waitUntil {scriptDone _functionCompiler};
+	
+	if (pulseLink_var_debug) then {systemChat "pulseLink: scripts compiled"};
 };
 [] call pulseLink_fnc_compileAll;
 
 
 // Spawn the services which means keypresses and other stuff.
 if (pulseLink_var_devMode) then {
-	[] execVM "PULSELINK\pulseLink_core_services.sqf";
+	[] execVM "PULSELINK\CORE\pulseLink_core_services.sqf";
 } else {
 	[] spawn pulseLink_core_services;
 };
@@ -72,16 +71,16 @@ if (pulseLink_var_devMode) then {
 
 // Call the function list to declare all the functions.
 if (pulseLink_var_devMode) then {
-	_functionList = [] execVM "PULSELINK\pulseLink_core_functions.sqf";
+	_functionList = [] execVM "PULSELINK\pulseLink_fnc_functions.sqf";
 	waitUntil {scriptDone _functionList};
 } else {
-	[] call pulseLink_core_functions;
+	[] call pulseLink_fnc_functions;
 };
 
 
 // Spawn the main loop.
 if (pulseLink_var_devMode) then {
-	[] execVM "PULSELINK\pulseLink_core_mainLoop.sqf";
+	[] execVM "PULSELINK\CORE\pulseLink_core_mainLoop.sqf";
 } else {
 	[] spawn pulseLink_core_mainLoop;
 };

@@ -24,7 +24,7 @@ Ins - 210 - 0xD2
 
 
 [] spawn {
-	while {true} do {
+	while {pulseLink_var_running} do {
 	// This should probably be a stackable onEachFrame type deal.
 		waituntil { (inputAction "BuldSwitchCamera" > 0)};
 		if (pulseLink_var_zeroKey) then {pulseLink_var_zeroKey = false} else {pulseLink_var_zeroKey = true};
@@ -33,7 +33,7 @@ Ins - 210 - 0xD2
 };
 
 [] spawn {
-	while {true} do {
+	while {pulseLink_var_running} do {
 	// This should probably be a stackable onEachFrame type deal.
 		waituntil {(inputAction "BuldFreeLook" > 0)};
 		if (pulseLink_var_oneKey) then {pulseLink_var_oneKey = false} else {pulseLink_var_oneKey = true};
@@ -58,25 +58,29 @@ Ins - 210 - 0xD2
 		private _buttonStackMax = 5;			// How many times the button needs to be pressed within given time to activate the reset
 		private _buttonStack 	= 0;			// How many times the button needs to be pressed within given time to activate the reset
 		private _lastPress 		= time;			// Declaring a variable
+
 		
 		
-	while {true} do {
+	while {pulseLink_var_running} do {
 		
 		// This should probably be a stackable onEachFrame type deal.
 		
 		//if (_buttonStack < 1) then {_buttonStack = 0};		// If it didn't, reset it to zero
 		
 		waituntil {(inputAction "BuldSelect" > 0)};
-		if (pulseLink_var_pulseKey) then {pulseLink_var_pulseKey = false} else {pulseLink_var_pulseKey = true};
-		waituntil {inputAction "BuldSelect" <= 0};
+		pulseLink_var_pulseKey = true;
+		waituntil {(inputAction "BuldSelect" <= 0)};
+		pulseLink_var_pulseKey = false;
+
+		
 		
 		// Check if this press happened within a short enough period of time since the last one
 		if ( (time - _lastPress) < _timeout ) then {
 			_buttonStack = _buttonStack + 1;
-			if (pulseLink_var_debug) then {systemChat format ["Sync pulse stack +1, now at: %1",_buttonStack];}
+			if (pulseLink_var_debug) then {systemChat format ["pulseLink: Sync pulse stack +1, now at: %1",_buttonStack];}
 		} else {
 			_buttonStack = 0;
-			if (pulseLink_var_debug) then {systemChat "Sync pulse stack got resetting..."};
+			//if (pulseLink_var_debug) then {systemChat "pulseLink: Sync pulse stack got reset..."}; // Annoying even with debug. Keep hidden until needed
 		};
 		
 		// Check if we managed to stack the button enough times
