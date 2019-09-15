@@ -21,24 +21,24 @@ while {pulseLink_var_running} do {
 	scopeName "mainLoop";
 	
 	// Wait and receive function code
-	_input = [] call pulseLink_core_interface; 		// This arrests the current script until interface is done or aborted
+	_input = [] call pulseLink_core_interface;
 	
+	// We now know that we have either a failstate or a decimal value, verified or non-verified.
 	
-	// Either run the function or verify it first
-	if (pulseLink_var_verification && !pulseLink_var_verificationSkip) then {
-		[_input] call pulseLink_core_verification;		// If verification is on
+	// If we have a failstate, then don't go and lookup the function, because this is the main loop son
+	If ( _input == -1 ) then {
+		if (pulseLink_var_debug) then {systemChat "pulseLink: Failstate detected, restarting main loop."};
 	} else {
-		[_input] call pulseLink_fnc_functionSelect;		// Run the received function
+		[_input] call pulseLink_fnc_functionSelect;
 	};
 	
-	pulseLink_var_pulseKey = false;						// Reset pulse key in case it's stuck
-	pulseLink_var_verificationSkip = false;		// Reset "skip first verification" if it was just set
+	pulseLink_var_pulseKey = false;												// Reset pulse key in case it's stuck
 	
 };
 
-pulseLink_var_running = false;											// If we somehow get outside the loop, stop all other scripts
-if (pulseLink_var_debug) then {systemChat "pulseLink: Script stopped"};	// Tell the user all scripts have quite
+pulseLink_var_running = false;													// If we somehow get outside the loop, stop all other scripts
 
+if (pulseLink_var_debug) then {systemChat "pulseLink: Script stopped"};			// Tell the user all scripts have quite
 
 
 

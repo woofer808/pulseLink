@@ -10,7 +10,7 @@ comment "																										";
 comment "-------------------------------------------------------------------------------------------------------";
 
 /* Example
-pulseLink_core_mainLoop = compile preprocessFileLineNumbers "PULSELINK\CORE\pulseLink_core_mainLoop.sqf";
+pulseLink_fnc_yourScript = compile preprocessFileLineNumbers "PULSELINK\functions\pulseLink_fnc_yourScript.sqf";
 */
 
 

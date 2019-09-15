@@ -1,3 +1,4 @@
+
 comment "-------------------------------------------------------------------------------------------------------";
 comment "											pulseLink, by woofer.										";
 comment "																										";
@@ -21,70 +22,129 @@ comment "-----------------------------------------------------------------------
 */
 
 
+scopeName "topLevel";
 
-private _codeTimeout 	= 1;	// Timeout in seconds between each pulse and bit sent
+private _scriptTimeStart = 0;
+private _output = 0;
 
-// Function has been spawned, now we await the first pulse to start the recording
+
+comment "-------------------------------------------------------------------------------------------------------";
+comment "												setup													";
+comment "-------------------------------------------------------------------------------------------------------";
+
+
+private _transferTimeout = 1.5;					// Timeout in seconds between each pulse and bit sent
+
 if (pulseLink_var_debug) then {systemChat "pulseLink: ready"};
-waitUntil 	{
-				pulseLink_var_pulseKey 		||	// Go on when pulse is given
-				pulseLink_var_interfaceDone		// Go on to quit if script is set to false
+
+waitUntil 	{								// Wait for the pulse key to be pressed
+				pulseLink_var_pulseKey ||	// Go on when pulse is given
+				!pulseLink_var_running		// If pulseLink is terminated, go on to kill this script
 			};
+private _scriptTimeStart = time;
+			
+	waitUntil {!pulseLink_var_pulseKey};						// Wait here until the pulse key is set back to false
+			
+if (!pulseLink_var_running) exitWith {};	// Kill all scripts on this request
 
 
-// If the script is terminated manually or by timer
-if (pulseLink_var_interfaceDone) exitWith {systemChat "pulseLink: Interface aborted."};
+if (pulseLink_var_debug) then {systemChat "pulseLink: Loop started, please provide key sequence"};
+
+
+pulseLink_var_allowInput = true;			// Allow input of zeros and ones to be done
+
+private _word	= [];						// Declare the binary code array
+private _bit	= 0; 						// Declare the first bit number place in the binary code array
+private _timer	= 0;						// Declare variable used for checking input timeout
+private _verificationLoop = 1;				// Declare iteration number in case we are verifying
+
+private _nonVerified = 0;					// Declare the non-verified output
+private _verification = 0;					// Declare the verified output in case verification is on
 
 
 
+// On verification, VA shouldn't send the first pulse
 
+comment "-------------------------------------------------------------------------------------------------------";
+comment "									input loop and verification											";
+comment "-------------------------------------------------------------------------------------------------------";
 
-// if debug is on, tell the user what's going on
-if (pulseLink_var_debug) then {systemChat "Loop started, please provide key sequence"};
+// If verification is on, then just let the input loop run twice
+// If we decide that verification should use a method other than double sending, this entire block might have to be overhauled
+if (pulseLink_var_verification) then {_verificationLoop = 2} else {_verificationLoop = 1};
 
+for "_i" from 1 to _verificationLoop step 1 do {
 
-pulseLink_var_pulseKey = false;		// Make sure the pulse key state is set back to false
-
-pulseLink_var_allowInput = true;	// Allow input of zeros and ones to be done
-
-private _word	= [];				// Declare the binary code array
-private _bit	= 0; 				// Declare the first bit number place in the binary code array
-private _timer	= 0;				// Declare variable used for checking input timeout
-
-while {true} do {
+	if (_i == 2) then {							// In case of verification,
+		waitUntil {pulseLink_var_pulseKey};		// wait for the first pulse of the second code transfer
+		pulseLink_var_pulseKey = false;			// Also set the pulse back to false immediately instead of waiting for it
+	};
 	
-	_timer = time + _codeTimeout;				// Start the input timer to control for timeout of the keypresses
+	_word = [];									// Reset the word after each run of the for-loop
+	
+	while {true} do { 							// This is the actual code transfer loop that receives each bit and ending pulse
+		
+		_timer = time + _transferTimeout; 		// Start the input timer to control for timeout of the keypresses
+		
+		// Hold the loop until either of the proper keys are pressed or the timer has run out
+		waitUntil {pulseLink_var_zeroKey || pulseLink_var_oneKey || pulseLink_var_pulseKey || (_timer < time)};
 
-	// Hold the loop until either of the proper keys are pressed or the timer has run out
-	waitUntil {pulseLink_var_zeroKey || pulseLink_var_oneKey || pulseLink_var_pulseKey || (_timer < time) || pulseLink_var_interfaceDone};
+		if (_timer < time) then {													// Timer ran out of... well, time. It timed out.
+			systemchat "pulseLink: Input timeout! Try slowing down the profile.";	// Tell the user
+			_word = -1;																// Set the word variable to failstate value of -1
+			breakTo "topLevel";														// Exit outside all loop scopes.
+		};
+		
+		// If the zero key was pressed, store the bit as 0 at the current bit number
+		if (pulseLink_var_zeroKey) then {pulseLink_var_zeroKey = false;_word set [_bit,0];_bit = _bit + 1;};
+		// If the one key was pressed, store the bit as 1 at the current bit number
+		if (pulseLink_var_oneKey) then {pulseLink_var_oneKey = false;_word set [_bit,1];_bit = _bit + 1;};
+		// If pulse key was pressed. Exit the script.
+		if (pulseLink_var_pulseKey) exitWith {if (pulseLink_var_debug) then {systemChat "Transfer done."};};
+	
+	}; // End of while loop
+	
+	if (_i == 1) then {_nonVerified = _word};					// Store the first run of the code loop into a variable
+	
+	if (_i == 2) then {											// If verification is on and we got a second code...
+		_verification = _word;									// ... store it in a variable and...
+		
+		if (
+			(_nonVerified isEqualTo _verification)  &&
+			!(_nonVerified isEqualTo -1)
+			
+		) then {		// ... check if code is verified. (This line can be switched to more efficient tests)
+		
+			breakTo "topLevel";									// If verification worked, exit outside all loop scopes.
+			if (pulseLink_var_debug) then {systemChat "verification passed"};
+			
+		} else {												// If verfication and code didn't match...
+			breakTo "topLevel";									// ... exit to outside of loop scopes.
+		};
+		
+	};
+	
+	waitUntil {!pulseLink_var_pulseKey};						// Wait here until the pulse key is set back to false
+	
+}; // End of for loop
 
-	// If it was the timer that ran out of... well, time. Just exit the script.
-	if (_timer < time) exitWith {if (pulseLink_var_debug) then {systemChat "input timeout"};_word = -1;};
-	// If the mod has been requested to stop, quit all scripts.
-	if (pulseLink_var_interfaceDone) exitWith {if (pulseLink_var_debug) then {systemChat "script was halted"};};
 
-	// If the zero key was pressed, store the bit as 0 at the current bit number
-	if (pulseLink_var_zeroKey) then {pulseLink_var_zeroKey = false;_word set [_bit,0];_bit = _bit + 1;};
-	// If the one key was pressed, store the bit as 1 at the current bit number
-	if (pulseLink_var_oneKey) then {pulseLink_var_oneKey = false;_word set [_bit,1];_bit = _bit + 1;};
-	// If pulse key was pressed. Exit the script.
-	if (pulseLink_var_pulseKey) exitWith {pulseLink_var_pulseKey = false;if (pulseLink_var_debug) then {systemChat "pulse key was pressed"};};
+comment "-------------------------------------------------------------------------------------------------------";
+comment "											Return values												";
+comment "-------------------------------------------------------------------------------------------------------";
 
+pulseLink_var_allowInput = false;									// No need to receive anymore. Input of zeroes and ones is no longer allowed
 
-};
+if ( (_nonVerified isEqualTo -1) || (_word isEqualTo -1) ) exitWith {-1};						// If we timed out or verification failed, stop here and return failstate value
 
+_output = _nonVerified call pulseLink_core_binToDec;	// If code came through, convert the word into decimal
 
-// Input of zeroes and ones is no longer allowed
-pulseLink_var_allowInput = false;
+_scriptTime = time - _scriptTimeStart;								// Calculate the amount of time it took for the interface to complete
 
-// If we timed out, stop here
-if (_word isEqualTo -1) exitWith {_word;};
+// If debug is on, show the current output and completion time
+if (pulseLink_var_debug) then {systemChat format ["pulseLink: word: %1, function ID: %2, command time: %3, verified: %4",_nonVerified,_output,_scriptTime,pulseLink_var_verification]};
 
-// Convert the word into decimal
-private _numberOutput = _word call pulseLink_core_binToDec;
-
-// If debug is on, show the current input
-if (pulseLink_var_debug) then {systemChat format ["current _word: %1 and _function ID: %2",_word,_numberOutput]};
+pulseLink_var_pulseKey = false;
 
 // Return the proper value
-_numberOutput;
+_output;
