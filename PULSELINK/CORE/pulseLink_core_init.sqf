@@ -16,7 +16,6 @@ comment "-----------------------------------------------------------------------
 //TODO- Figure out what to do with the native number input system. Should it be it's own core function?
 //TODO- Clean up profile core and give it proper structure
 //TODO- Looks like it's possible to spam command still, but that's with keybinds to VA commands.
-//TODO- Input number doesn't work in combination with verification.
 
 //TODO- Make a "restart script" command to sync the profile and the mod at the beginning b/c of settings for example (function 11)
 //TODO- Audible/visual confirmation of commands and errors internally by the script. Maybe should be modular.
